@@ -40,8 +40,8 @@ const spritePaths = {
     up: 'assets/sprite_0_3.png',
   },
   props: {
-    tree: 'assets/sprite_3_0.png',
-    tent: 'assets/sprite_3_2.png',
+    tree: 'assets/tree2.png',
+    tent: 'assets/tent1.png',
     nest: 'assets/sprite_2_1.png',
   },
   npc: {
@@ -82,17 +82,17 @@ let player = {
 
 // Props
 const props = [
-  { type: 'tree', x: 100, y: 100, width: 32, height: 32 },
-  { type: 'tree', x: 180, y: 220, width: 32, height: 32 },
-  { type: 'tree', x: 350, y: 80, width: 32, height: 32 },
-  { type: 'tree', x: 620, y: 300, width: 32, height: 32 },
-  { type: 'tree', x: 720, y: 150, width: 32, height: 32 },
-  { type: 'tree', x: 250, y: 420, width: 32, height: 32 },
-  { type: 'tree', x: 500, y: 500, width: 32, height: 32 },
-  { type: 'tent', x: 500, y: 150, width: 48, height: 48, id: 'tent1' },
-  { type: 'tent', x: 100, y: 400, width: 48, height: 48, id: 'tent2' },
-  { type: 'tent', x: 650, y: 450, width: 48, height: 48, id: 'tent3' },
-  { type: 'tent', x: 320, y: 300, width: 48, height: 48, id: 'tent4' },
+  { type: 'tree', x: 100, y: 100, width: 52, height: 52 },
+  { type: 'tree', x: 180, y: 220, width: 52, height: 52 },
+  { type: 'tree', x: 350, y: 80, width: 52, height: 52 },
+  { type: 'tree', x: 620, y: 300, width: 52, height: 52 },
+  { type: 'tree', x: 720, y: 150, width: 52, height: 52 },
+  { type: 'tree', x: 250, y: 420, width: 52, height: 52 },
+  { type: 'tree', x: 500, y: 500, width: 52, height: 52 },
+  { type: 'tent', x: 500, y: 150, width: 52, height: 52, id: 'tent1' },
+  { type: 'tent', x: 100, y: 400, width: 52, height: 52, id: 'tent2' },
+  { type: 'tent', x: 650, y: 450, width: 52, height: 52, id: 'tent3' },
+  { type: 'tent', x: 320, y: 300, width: 52, height: 52, id: 'tent4' },
   { type: 'nest', x: 200, y: 150, width: 32, height: 32 },
   { type: 'nest', x: 600, y: 350, width: 32, height: 32 }
 ];
