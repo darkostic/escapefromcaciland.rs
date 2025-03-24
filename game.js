@@ -390,7 +390,7 @@ function drawProps() {
     if (img && img.complete) {
       drawScaledImage(img, prop.x, prop.y, prop.width, prop.height);
     } else {
-      ctx.fillStyle = prop.type === 'tree' ? 'green' : prop.type === 'tent' ? 'blue' : prop.type === 'nest' ? 'orange' : 'gray';
+    //   ctx.fillStyle = prop.type === 'tree' ? 'green' : prop.type === 'tent' ? 'blue' : prop.type === 'nest' ? 'orange' : 'gray';
       ctx.fillRect(offsetX + prop.x * scale, offsetY + prop.y * scale, prop.width * scale, prop.height * scale);
     }
   }
@@ -400,7 +400,7 @@ function drawPlayer() {
   if (player.sprite && player.sprite.complete) {
     drawScaledImage(player.sprite, player.x, player.y, player.width, player.height);
   } else {
-    ctx.fillStyle = 'red';
+    // ctx.fillStyle = 'red';
     ctx.fillRect(offsetX + player.x * scale, offsetY + player.y * scale, player.width * scale, player.height * scale);
   }
 }
@@ -410,17 +410,17 @@ function drawNPCs() {
     if (npc.sprite && npc.sprite.complete) {
       drawScaledImage(npc.sprite, npc.x, npc.y, npc.width, npc.height);
     } else {
-      ctx.fillStyle = 'orange';
+    //   ctx.fillStyle = 'orange';
       ctx.fillRect(offsetX + npc.x * scale, offsetY + npc.y * scale, npc.width * scale, npc.height * scale);
     }
 
     // Display reactions
     if (npc.hit && npc.reactionText) {
-      ctx.fillStyle = 'red';
+    //   ctx.fillStyle = 'red';
       ctx.font = '14px sans-serif';
       ctx.fillText(npc.reactionText, offsetX + npc.x * scale, offsetY + npc.y * scale - 5);
     } else if (npc.angry) {
-      ctx.fillStyle = 'red';
+    //   ctx.fillStyle = 'red';
       ctx.font = '14px sans-serif';
       ctx.fillText('😡', offsetX + npc.x * scale, offsetY + npc.y * scale - 5);
     }
