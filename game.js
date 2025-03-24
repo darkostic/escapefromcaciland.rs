@@ -5,7 +5,9 @@ const ctx = canvas.getContext('2d');
 const VIRTUAL_WIDTH = 800;
 const VIRTUAL_HEIGHT = 600;
 
-// Scaling factor
+const WORLD_WIDTH = 1600;
+const WORLD_HEIGHT = 1200;
+
 let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
@@ -13,16 +15,15 @@ let npcSpawnTimer = 0;
 let score = 0;
 let gameOver = false;
 
+const camera = {
+  x: 0,
+  y: 0,
+  zoom: 2 // 🔍 zoom level: 2x zoom (each game unit = 2 screen pixels)
+};
+
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  const scaleX = canvas.width / VIRTUAL_WIDTH;
-  const scaleY = canvas.height / VIRTUAL_HEIGHT;
-  scale = Math.min(scaleX, scaleY);
-
-  offsetX = (canvas.width - VIRTUAL_WIDTH * scale) / 2;
-  offsetY = (canvas.height - VIRTUAL_HEIGHT * scale) / 2;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -176,7 +177,7 @@ function isColliding(a, b) {
 // Update
 function updatePlayer() {
   if (gameOver) return;
-  
+
   const nextPos = { x: player.x, y: player.y };
   let moved = false;
 
@@ -205,15 +206,24 @@ function updatePlayer() {
     height: player.height
   };
 
+  // Only block collision with solid props (trees and tents)
   const collides = props.some(p =>
-    p.type !== 'nest' && isColliding(nextRect, p)
-  );  
+    (p.type === 'tree' || p.type === 'tent') &&
+    isColliding(nextRect, p)
+  );
 
+  // Move only if not colliding and within world bounds
   if (!collides) {
-    if (nextRect.x >= 0 && nextRect.x + player.width <= VIRTUAL_WIDTH) {
+    if (
+      nextRect.x >= 0 &&
+      nextRect.x + player.width <= WORLD_WIDTH
+    ) {
       player.x = nextRect.x;
     }
-    if (nextRect.y >= 0 && nextRect.y + player.height <= VIRTUAL_HEIGHT) {
+    if (
+      nextRect.y >= 0 &&
+      nextRect.y + player.height <= WORLD_HEIGHT
+    ) {
       player.y = nextRect.y;
     }
   }
@@ -226,7 +236,7 @@ function updatePlayer() {
   if (player.hasEgg) {
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(offsetX + player.x * scale + 8, offsetY + player.y * scale - 5, 4, 0, Math.PI * 2);
+    ctx.arc(screenX(player.x), screenY(player.y) - 5, 4, 0, Math.PI * 2);
     ctx.fill();
   }
   
@@ -237,16 +247,14 @@ function updatePlayer() {
       width: player.width,
       height: player.height
     };
-  
+
     for (const p of props) {
-      if (p.type === 'nest') {
-        if (isColliding(playerRect, p)) {
-          player.hasEgg = true;
-          break;
-        }
+      if (p.type === 'nest' && isColliding(playerRect, p)) {
+        player.hasEgg = true;
+        break;
       }
     }
-  }  
+  }
 }
 
 function updateNPCs() {
@@ -255,22 +263,22 @@ function updateNPCs() {
   for (let i = npcs.length - 1; i >= 0; i--) {
     const npc = npcs[i];
 
-    // Remove dead NPCs
+    // If hit, count down until they disappear
     if (npc.hit) {
       npc.hitTimer--;
       if (npc.hitTimer <= 0) {
         npcs.splice(i, 1);
       }
-      continue; // skip movement while hit
+      continue;
     }
 
-    // Randomly become angry
+    // Randomly go angry
     if (!npc.angry && Math.random() < 0.0015) {
       npc.angry = true;
       npc.angryTimer = Math.floor(Math.random() * 600) + 300;
     }
 
-    // Calm down after timer
+    // Calm down
     if (npc.angry) {
       npc.angryTimer--;
       if (npc.angryTimer <= 0) {
@@ -278,21 +286,16 @@ function updateNPCs() {
       }
     }
 
-    let speed = 1;
+    const speed = player.speed;
 
-    // Determine direction
+    // Direction
     if (npc.angry) {
       const dx = player.x - npc.x;
       const dy = player.y - npc.y;
-      speed = 2;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        npc.direction = dx > 0 ? 'right' : 'left';
-      } else {
-        npc.direction = dy > 0 ? 'down' : 'up';
-      }
+      npc.direction = Math.abs(dx) > Math.abs(dy)
+        ? (dx > 0 ? 'right' : 'left')
+        : (dy > 0 ? 'down' : 'up');
     } else {
-      // Random walk logic
       if (npc.walkStepsLeft <= 0) {
         const directions = ['up', 'down', 'left', 'right'];
         npc.direction = directions[Math.floor(Math.random() * directions.length)];
@@ -308,12 +311,19 @@ function updateNPCs() {
     if (npc.direction === 'left') nextX -= speed;
     if (npc.direction === 'right') nextX += speed;
 
-    const testRect = { x: nextX, y: nextY, width: npc.width, height: npc.height };
+    const testRect = {
+      x: nextX,
+      y: nextY,
+      width: npc.width,
+      height: npc.height
+    };
 
     const collides = props.some(p =>
-      isColliding(testRect, p) && (p.type !== 'tent' || p.id !== npc.homeId)
-    ) || nextX < 0 || nextX + npc.width > VIRTUAL_WIDTH ||
-         nextY < 0 || nextY + npc.height > VIRTUAL_HEIGHT;
+      (p.type === 'tree' || p.type === 'tent') &&
+      (p.id !== npc.homeId) &&
+      isColliding(testRect, p)
+    ) || nextX < 0 || nextX + npc.width > WORLD_WIDTH ||
+         nextY < 0 || nextY + npc.height > WORLD_HEIGHT;
 
     if (!collides) {
       npc.x = nextX;
@@ -331,13 +341,23 @@ function updateNPCs() {
       npc.walkStepsLeft = 0;
     }
 
-    // Check player collision if angry
-    const npcRect = { x: npc.x, y: npc.y, width: npc.width, height: npc.height };
-    const playerRect = { x: player.x, y: player.y, width: player.width, height: player.height };
+    // Check player collision = game over
+    const npcRect = {
+      x: npc.x,
+      y: npc.y,
+      width: npc.width,
+      height: npc.height
+    };
+    const playerRect = {
+      x: player.x,
+      y: player.y,
+      width: player.width,
+      height: player.height
+    };
 
     if (npc.angry && isColliding(npcRect, playerRect)) {
       gameOver = true;
-      console.log("💀 Game Over");
+      console.log("💀 You got caught!");
     }
 
     npc.cooldown = Math.floor(Math.random() * 10) + 5;
@@ -379,50 +399,63 @@ function updateEggs() {
   thrownEggs = thrownEggs.filter(e => e.active);
 }
 
+function screenX(worldX) {
+  return (worldX - camera.x) * camera.zoom;
+}
+
+function screenY(worldY) {
+  return (worldY - camera.y) * camera.zoom;
+}
+
 // Draw
-function drawScaledImage(img, x, y, w, h) {
-  ctx.drawImage(img, offsetX + x * scale, offsetY + y * scale, w * scale, h * scale);
+function drawImageScaled(img, x, y, width, height) {
+  ctx.drawImage(img, screenX(x), screenY(y), width * camera.zoom, height * camera.zoom);
 }
 
 function drawProps() {
   for (const prop of props) {
-    const img = sprites.props[prop.type];
+    let img = null;
+
+    if (prop.type === 'tree') {
+      img = sprites.props.tree;
+    } else if (prop.type === 'tent') {
+      img = sprites.props.tent;
+    } else if (prop.type === 'nest') {
+      img = sprites.props.nest;
+    }
+
     if (img && img.complete) {
-      drawScaledImage(img, prop.x, prop.y, prop.width, prop.height);
+      drawImageScaled(img, prop.x, prop.y, prop.width, prop.height);
     } else {
-    //   ctx.fillStyle = prop.type === 'tree' ? 'green' : prop.type === 'tent' ? 'blue' : prop.type === 'nest' ? 'orange' : 'gray';
-      ctx.fillRect(offsetX + prop.x * scale, offsetY + prop.y * scale, prop.width * scale, prop.height * scale);
+      ctx.fillStyle = 'gray';
+      ctx.fillRect(screenX(prop.x), screenY(prop.y), prop.width * camera.zoom, prop.height * camera.zoom);
     }
   }
 }
 
 function drawPlayer() {
   if (player.sprite && player.sprite.complete) {
-    drawScaledImage(player.sprite, player.x, player.y, player.width, player.height);
+    drawImageScaled(player.sprite, player.x, player.y, player.width, player.height);
   } else {
-    // ctx.fillStyle = 'red';
-    ctx.fillRect(offsetX + player.x * scale, offsetY + player.y * scale, player.width * scale, player.height * scale);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(screenX(player.x), screenY(player.y), player.width * camera.zoom, player.height * camera.zoom);
   }
 }
 
 function drawNPCs() {
   for (const npc of npcs) {
     if (npc.sprite && npc.sprite.complete) {
-      drawScaledImage(npc.sprite, npc.x, npc.y, npc.width, npc.height);
+      drawImageScaled(npc.sprite, npc.x, npc.y, npc.width, npc.height);
     } else {
-    //   ctx.fillStyle = 'orange';
-      ctx.fillRect(offsetX + npc.x * scale, offsetY + npc.y * scale, npc.width * scale, npc.height * scale);
+      ctx.fillStyle = 'orange';
+      ctx.fillRect(screenX(npc.x), screenY(npc.y), npc.width * camera.zoom, npc.height * camera.zoom);
     }
 
-    // Display reactions
-    if (npc.hit && npc.reactionText) {
-    //   ctx.fillStyle = 'red';
+    if (npc.angry || npc.hit) {
+      ctx.fillStyle = npc.hit ? 'red' : 'orange';
       ctx.font = '14px sans-serif';
-      ctx.fillText(npc.reactionText, offsetX + npc.x * scale, offsetY + npc.y * scale - 5);
-    } else if (npc.angry) {
-    //   ctx.fillStyle = 'red';
-      ctx.font = '14px sans-serif';
-      ctx.fillText('😡', offsetX + npc.x * scale, offsetY + npc.y * scale - 5);
+      const reaction = npc.hit ? (npc.reactionText || '😵') : '😡';
+      ctx.fillText(reaction, screenX(npc.x), screenY(npc.y) - 5);
     }
   }
 }
@@ -431,7 +464,12 @@ function drawEggs() {
   for (const egg of thrownEggs) {
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(offsetX + egg.x * scale + egg.width * scale / 2, offsetY + egg.y * scale + egg.height * scale / 2, egg.width * scale / 2, 0, Math.PI * 2);
+    ctx.arc(
+      screenX(egg.x + egg.width / 2),
+      screenY(egg.y + egg.height / 2),
+      (egg.width / 2) * camera.zoom,
+      0, Math.PI * 2
+    );
     ctx.fill();
   }
 }
@@ -479,6 +517,14 @@ function isLandscape() {
 
 // Loop
 function gameLoop() {
+  // Center camera on player
+  camera.x = player.x + player.width / 2 - (canvas.width / 2) / camera.zoom;
+  camera.y = player.y + player.height / 2 - (canvas.height / 2) / camera.zoom;
+
+  // Clamp camera to world bounds
+  camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width / camera.zoom));
+  camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height / camera.zoom));
+
   if (!isLandscape() || gameOver) {
     requestAnimationFrame(gameLoop);
     return;
@@ -507,7 +553,6 @@ function gameLoop() {
   ctx.font = '16px sans-serif';
   ctx.fillText(`Score: ${score}`, 10, 20);
 
-  // Game over message
   if (gameOver) {
     ctx.fillStyle = 'red';
     ctx.font = '32px sans-serif';
