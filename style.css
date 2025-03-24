@@ -54,15 +54,16 @@ html, body {
   #throwBtn {
     position: absolute;
     bottom: 30px;
-    right: 20px;
+    right: 20px; /* 🢂 Moves it to bottom-right corner */
     width: 80px;
     height: 80px;
     font-size: 32px;
     border-radius: 50%;
     background: #fffce8;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     border: none;
-  }
+    z-index: 10;
+  }  
   
   @media screen and (orientation: portrait) {
     body::before {
