@@ -35,10 +35,10 @@ window.addEventListener("orientationchange", () => {
 // Sprite loading
 const spritePaths = {
   player: {
-    down: 'assets/sprite_0_0.png',
-    left: 'assets/sprite_0_1.png',
-    right: 'assets/sprite_0_2.png',
-    up: 'assets/sprite_0_3.png',
+    down: 'assets/player.png',
+    left: 'assets/player.png',
+    right: 'assets/player.png',
+    up: 'assets/player.png',
   },
   props: {
     tree: 'assets/tree2.png',
@@ -46,10 +46,10 @@ const spritePaths = {
     nest: 'assets/sprite_2_1.png',
   },
   npc: {
-    down: 'assets/sprite_1_0.png',
-    left: 'assets/sprite_1_1.png',
-    right: 'assets/sprite_1_2.png',
-    up: 'assets/sprite_1_3.png',
+    down: 'assets/caci.png',
+    left: 'assets/caci.png',
+    right: 'assets/caci.png',
+    up: 'assets/caci.png',
   }  
 };
 
@@ -74,8 +74,8 @@ let player = {
   x: 400,
   y: 300,
   speed: 2,
-  width: 32,
-  height: 32,
+  width: 52,
+  height: 52,
   direction: 'down',
   sprite: null,
   hasEgg: false
@@ -99,10 +99,10 @@ const props = [
 ];
 
 const npcs = [
-  { x: 500, y: 150, width: 32, height: 32, direction: 'down', sprite: null, homeX: 500, homeY: 150, homeId: 'tent1', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 100, y: 400, width: 32, height: 32, direction: 'down', sprite: null, homeX: 100, homeY: 400, homeId: 'tent2', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 650, y: 450, width: 32, height: 32, direction: 'down', sprite: null, homeX: 650, homeY: 450, homeId: 'tent3', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 320, y: 300, width: 32, height: 32, direction: 'down', sprite: null, homeX: 320, homeY: 300, homeId: 'tent4', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
+  { x: 500, y: 150, width: 42, height: 52, direction: 'down', sprite: null, homeX: 500, homeY: 150, homeId: 'tent1', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
+  { x: 100, y: 400, width: 42, height: 52, direction: 'down', sprite: null, homeX: 100, homeY: 400, homeId: 'tent2', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
+  { x: 650, y: 450, width: 42, height: 52, direction: 'down', sprite: null, homeX: 650, homeY: 450, homeId: 'tent3', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
+  { x: 320, y: 300, width: 42, height: 52, direction: 'down', sprite: null, homeX: 320, homeY: 300, homeId: 'tent4', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
 ];
 
 let thrownEggs = []; // Array of flying eggs
@@ -144,8 +144,8 @@ function spawnNPC() {
   const newNPC = {
     x: tent.x,
     y: tent.y,
-    width: 32,
-    height: 32,
+    width: 52,
+    height: 52,
     direction: 'down',
     sprite: sprites.npc.down,
     homeX: tent.x,
@@ -236,7 +236,7 @@ function updatePlayer() {
   if (player.hasEgg) {
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(screenX(player.x), screenY(player.y) - 5, 4, 0, Math.PI * 2);
+    ctx.arc(screenX(player.x) + 40, screenY(player.y) - 5, 4, 0, Math.PI * 2);
     ctx.fill();
   }
   
