@@ -79,7 +79,8 @@ let player = {
   height: 52,
   direction: 'down',
   sprite: null,
-  hasEgg: false
+  eggCount: 0, // 👈 new
+  maxEggs: 5
 };
 
 // Props
@@ -233,15 +234,8 @@ function updatePlayer() {
   npcs.forEach(npc => {
     npc.sprite = sprites.npc[npc.direction];
   });
-
-  if (player.hasEgg) {
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(screenX(player.x) + 40, screenY(player.y) - 5, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
   
-  if (!player.hasEgg) {
+  if (!player.eggCount > 0) {
     const playerRect = {
       x: player.x,
       y: player.y,
@@ -251,7 +245,7 @@ function updatePlayer() {
 
     for (const p of props) {
       if (p.type === 'nest' && isColliding(playerRect, p)) {
-        player.hasEgg = true;
+        player.eggCount = player.maxEggs;
         break;
       }
     }
@@ -437,6 +431,13 @@ function drawProps() {
 function drawPlayer() {
   if (player.sprite && player.sprite.complete) {
     drawImageScaled(player.sprite, player.x, player.y, player.width, player.height);
+    
+    // Show egg count above player
+    if (player.eggCount > 0) {
+      ctx.fillStyle = 'white';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`🥚 x${player.eggCount}`, screenX(player.x), screenY(player.y) - 10);
+    }
   } else {
     ctx.fillStyle = 'red';
     ctx.fillRect(screenX(player.x), screenY(player.y), player.width * camera.zoom, player.height * camera.zoom);
@@ -476,9 +477,9 @@ function drawEggs() {
 }
 
 function throwEgg() {
-  if (gameOver || !player.hasEgg) return;
+  if (gameOver || player.eggCount <= 0) return;
   
-  if (player.hasEgg) {
+  if (player.eggCount > 0) {
     const eggSpeed = 5;
     const eggSize = 16;
 
@@ -498,7 +499,7 @@ function throwEgg() {
       active: true
     });
 
-    player.hasEgg = false;
+    player.eggCount--;
   }
 }
 
