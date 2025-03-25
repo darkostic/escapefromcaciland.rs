@@ -44,7 +44,7 @@ const spritePaths = {
   props: {
     tree: 'assets/tree2.png',
     tent: 'assets/tent1.png',
-    nest: 'assets/sprite_2_1.png',
+    nest: 'assets/nest.png',
   },
   npc: {
     down: 'assets/caci.png',
@@ -95,8 +95,8 @@ const props = [
   { type: 'tent', x: 100, y: 400, width: 52, height: 52, id: 'tent2' },
   { type: 'tent', x: 650, y: 450, width: 52, height: 52, id: 'tent3' },
   { type: 'tent', x: 320, y: 300, width: 52, height: 52, id: 'tent4' },
-  { type: 'nest', x: 200, y: 150, width: 32, height: 32 },
-  { type: 'nest', x: 600, y: 350, width: 32, height: 32 }
+  { type: 'nest', x: 200, y: 150, width: 92, height: 92 },
+  { type: 'nest', x: 600, y: 350, width: 92, height: 92 }
 ];
 
 const npcs = [
