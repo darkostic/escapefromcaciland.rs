@@ -42,9 +42,17 @@ const spritePaths = {
     up: 'assets/player.png',
   },
   props: {
-    tree: 'assets/tree2.png',
-    tent: 'assets/tent1.png',
-    nest: 'assets/nest.png',
+    trees: [
+      'assets/tree_1.png',
+      'assets/tree_2.png',
+      'assets/tree_3.png'
+    ],
+    tents: [
+      'assets/tent_1.png',
+      'assets/tent_2.png',
+      'assets/tent_3.png'
+    ],
+    nest: 'assets/nest.png' // Your egg stand from earlier
   },
   npc: {
     down: 'assets/caci.png',
@@ -57,12 +65,19 @@ const spritePaths = {
 function loadSprites(paths) {
   const result = {};
   for (const key in paths) {
-    if (typeof paths[key] === 'string') {
+    const val = paths[key];
+    if (Array.isArray(val)) {
+      result[key] = val.map(src => {
+        const img = new Image();
+        img.src = src;
+        return img;
+      });
+    } else if (typeof val === 'string') {
       const img = new Image();
-      img.src = paths[key];
+      img.src = val;
       result[key] = img;
     } else {
-      result[key] = loadSprites(paths[key]);
+      result[key] = loadSprites(val);
     }
   }
   return result;
@@ -72,40 +87,124 @@ const sprites = loadSprites(spritePaths);
 
 // Player
 let player = {
-  x: 400,
-  y: 300,
+  x: 0,
+  y: 0,
   speed: 2,
   width: 52,
   height: 52,
   direction: 'down',
   sprite: null,
-  eggCount: 0, // 👈 new
+  eggCount: 0,
   maxEggs: 5
 };
 
-// Props
-const props = [
-  { type: 'tree', x: 100, y: 100, width: 52, height: 52 },
-  { type: 'tree', x: 180, y: 220, width: 52, height: 52 },
-  { type: 'tree', x: 350, y: 80, width: 52, height: 52 },
-  { type: 'tree', x: 620, y: 300, width: 52, height: 52 },
-  { type: 'tree', x: 720, y: 150, width: 52, height: 52 },
-  { type: 'tree', x: 250, y: 420, width: 52, height: 52 },
-  { type: 'tree', x: 500, y: 500, width: 52, height: 52 },
-  { type: 'tent', x: 500, y: 150, width: 52, height: 52, id: 'tent1' },
-  { type: 'tent', x: 100, y: 400, width: 52, height: 52, id: 'tent2' },
-  { type: 'tent', x: 650, y: 450, width: 52, height: 52, id: 'tent3' },
-  { type: 'tent', x: 320, y: 300, width: 52, height: 52, id: 'tent4' },
-  { type: 'nest', x: 200, y: 150, width: 92, height: 92 },
-  { type: 'nest', x: 600, y: 350, width: 92, height: 92 }
-];
+function isOverlapping(rect, buffer = 0) {
+  return props.some(p => {
+    const expanded = {
+      x: p.x - buffer / 2,
+      y: p.y - buffer / 2,
+      width: p.width + buffer,
+      height: p.height + buffer
+    };
+    return isColliding(rect, expanded);
+  });
+}
 
-const npcs = [
-  { x: 500, y: 150, width: 42, height: 52, direction: 'down', sprite: null, homeX: 500, homeY: 150, homeId: 'tent1', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 100, y: 400, width: 42, height: 52, direction: 'down', sprite: null, homeX: 100, homeY: 400, homeId: 'tent2', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 650, y: 450, width: 42, height: 52, direction: 'down', sprite: null, homeX: 650, homeY: 450, homeId: 'tent3', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-  { x: 320, y: 300, width: 42, height: 52, direction: 'down', sprite: null, homeX: 320, homeY: 300, homeId: 'tent4', cooldown: 0, hasLeftTent: false, stepsFromTent: 0, walkStepsLeft: 0, hit: false, hitTimer: 0 },
-];
+function placeProp(type, width, height, extra = {}) {
+  const maxTries = 200;
+  let tries = 0;
+
+  while (tries++ < maxTries) {
+    const x = Math.floor(Math.random() * (WORLD_WIDTH - width));
+    const y = Math.floor(Math.random() * (WORLD_HEIGHT - height));
+    const rect = { x, y, width, height };
+
+    if (!isOverlapping(rect, 16)) {
+      const prop = { type, x, y, width, height, ...extra };
+      props.push(prop);
+      return prop;
+    }
+  }
+
+  console.warn(`Couldn't place ${type} after ${maxTries} tries`);
+  return null;
+}
+
+function placePlayer() {
+  const px = WORLD_WIDTH / 2 - 26;
+  const py = WORLD_HEIGHT / 2 - 26;
+  const rect = { x: px, y: py, width: 52, height: 52 };
+
+  // Try center first, else try nearby
+  if (!isOverlapping(rect, 16)) {
+    player.x = px;
+    player.y = py;
+    return;
+  }
+
+  // Search in 100 random spots
+  let tries = 0;
+  while (tries++ < 100) {
+    const x = Math.floor(Math.random() * (WORLD_WIDTH - 52));
+    const y = Math.floor(Math.random() * (WORLD_HEIGHT - 52));
+    const test = { x, y, width: 52, height: 52 };
+    if (!isOverlapping(test, 16)) {
+      player.x = x;
+      player.y = y;
+      return;
+    }
+  }
+
+  console.warn("Could not find safe player spawn.");
+  player.x = px;
+  player.y = py;
+}
+
+const props = [];
+
+// 🌳 Trees (30)
+for (let i = 0; i < 30; i++) {
+  placeProp('tree', 52, 52, {
+    variant: Math.floor(Math.random() * sprites.props.trees.length)
+  });
+}
+
+// 🏕️ Tents (20)
+for (let i = 0; i < 20; i++) {
+  placeProp('tent', 52, 52, {
+    id: `tent${i + 1}`,
+    variant: Math.floor(Math.random() * sprites.props.tents.length)
+  });
+}
+
+// 🥚 Nests (5) — 92x92
+for (let i = 0; i < 5; i++) {
+  placeProp('nest', 92, 92);
+}
+
+placePlayer();
+
+const npcs = props
+  .filter(p => p.type === 'tent')
+  .map(p => ({
+    x: p.x,
+    y: p.y,
+    width: 42,
+    height: 52,
+    direction: 'down',
+    sprite: sprites.npc.down,
+    homeX: p.x,
+    homeY: p.y,
+    homeId: p.id,
+    cooldown: 0,
+    hasLeftTent: false,
+    stepsFromTent: 0,
+    walkStepsLeft: 0,
+    hit: false,
+    hitTimer: 0,
+    angry: false,
+    angryTimer: 0
+  }));
 
 let thrownEggs = []; // Array of flying eggs
 
@@ -368,8 +467,8 @@ function updateEggs() {
 
     // Out of bounds
     if (
-      egg.x < 0 || egg.x > VIRTUAL_WIDTH ||
-      egg.y < 0 || egg.y > VIRTUAL_HEIGHT
+      egg.x < 0 || egg.x > WORLD_WIDTH ||
+      egg.y < 0 || egg.y > WORLD_HEIGHT
     ) {
       egg.active = false;
     }
@@ -412,9 +511,9 @@ function drawProps() {
     let img = null;
 
     if (prop.type === 'tree') {
-      img = sprites.props.tree;
+      img = sprites.props.trees[prop.variant || 0];
     } else if (prop.type === 'tent') {
-      img = sprites.props.tent;
+      img = sprites.props.tents[prop.variant || 0];
     } else if (prop.type === 'nest') {
       img = sprites.props.nest;
     }
