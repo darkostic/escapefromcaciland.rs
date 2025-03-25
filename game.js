@@ -15,6 +15,19 @@ let npcSpawnTimer = 0;
 let score = 0;
 let gameOver = false;
 
+const musicPlaylist = [
+  'assets/music1.mp3',
+  'assets/dosao-sam-jer-imam-pravo-da-dodjem.mp3'
+];
+
+const deathSound = new Audio('assets/nemoj-da-me-guras.mp3');
+deathSound.volume = 1.0; // you can adjust if needed
+
+let currentTrackIndex = 0;
+const bgMusic = new Audio();
+bgMusic.volume = 0.5;
+bgMusic.loop = false; // handled manually
+
 const camera = {
   x: 0,
   y: 0,
@@ -32,6 +45,31 @@ resizeCanvas();
 window.addEventListener("orientationchange", () => {
   resizeCanvas();
 });
+
+function playNextTrack() {
+  currentTrackIndex = (currentTrackIndex + 1) % musicPlaylist.length;
+  bgMusic.src = musicPlaylist[currentTrackIndex];
+  bgMusic.play().catch(() => {
+    console.warn('Music play blocked');
+  });
+}
+
+// Start first track
+function startMusicOnce() {
+  if (bgMusic.src) return; // already started
+  bgMusic.src = musicPlaylist[currentTrackIndex];
+  bgMusic.play().catch(() => {
+    console.warn('Music blocked by browser until interaction');
+  });
+}
+
+// On track end, play the next one
+bgMusic.addEventListener('ended', playNextTrack);
+
+// Bind to first interaction
+document.addEventListener('click', startMusicOnce);
+document.addEventListener('keydown', startMusicOnce);
+document.addEventListener('touchstart', startMusicOnce);
 
 // Sprite loading
 const spritePaths = {
@@ -450,8 +488,12 @@ function updateNPCs() {
     };
 
     if (npc.angry && isColliding(npcRect, playerRect)) {
-      gameOver = true;
-      console.log("💀 You got caught!");
+      if (!gameOver) {
+        gameOver = true;
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+        deathSound.play();
+      }
     }
 
     npc.cooldown = Math.floor(Math.random() * 10) + 5;
