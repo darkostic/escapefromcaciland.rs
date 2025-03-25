@@ -18,8 +18,9 @@ let gameOver = false;
 const camera = {
   x: 0,
   y: 0,
-  zoom: 2 // 🔍 zoom level: 2x zoom (each game unit = 2 screen pixels)
+  zoom: 1.5 // 🔍 zoom level: 2x zoom (each game unit = 2 screen pixels)
 };
+camera.zoom = window.innerWidth < 768 ? 1.2 : 1.6;
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
