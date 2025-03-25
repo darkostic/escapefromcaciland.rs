@@ -274,7 +274,7 @@ function updateNPCs() {
     }
 
     // Randomly go angry
-    if (!npc.angry && Math.random() < 0.0015) {
+    if (!npc.angry && Math.random() < 0.0005) {
       npc.angry = true;
       npc.angryTimer = Math.floor(Math.random() * 600) + 300;
     }
