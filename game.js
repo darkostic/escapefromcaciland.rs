@@ -1,12 +1,26 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+let gameStarted = false;
+let skipWelcomeScreen = false;
+
 // Virtual world size
 const VIRTUAL_WIDTH = 800;
 const VIRTUAL_HEIGHT = 600;
 
 const WORLD_WIDTH = 1600;
 const WORLD_HEIGHT = 1200;
+
+const playerWidth = 52;
+const playerHeight = 81;
+const npcWidth = 32;
+const npcHeight = 81;
+const treeWidth = 52;
+const treeHeight = 52;
+const tentWidth = 52;
+const tentHeight = 52;
+const nestWidth = 92;
+const nestHeight = 92;
 
 let scale = 1;
 let offsetX = 0;
@@ -16,8 +30,8 @@ let score = 0;
 let gameOver = false;
 
 const musicPlaylist = [
+  'assets/dosao-sam-jer-imam-pravo-da-dodjem.mp3',
   'assets/music1.mp3',
-  'assets/dosao-sam-jer-imam-pravo-da-dodjem.mp3'
 ];
 
 const deathSound = new Audio('assets/nemoj-da-me-guras.mp3');
@@ -63,21 +77,54 @@ function startMusicOnce() {
   });
 }
 
+function startGame() {
+  if (!gameStarted) {
+    const welcome = document.getElementById('welcomeScreen');
+    if (welcome && !skipWelcomeScreen) {
+      welcome.style.display = 'none';
+    }
+
+    startMusicOnce();
+    gameStarted = true;
+  }
+}
+
+function resetGame() {
+  // Clear props and NPCs
+  props.length = 0;
+  npcs.length = 0;
+  thrownEggs.length = 0;
+
+  score = 0;
+  gameOver = false;
+
+  // Regenerate world layout
+  generateWorld(); // ⬅️ assumes you're using a function to fill props & npcs
+  placePlayer();
+
+  // Restart music
+  bgMusic.currentTime = 0;
+  bgMusic.play();
+
+  // Resume game loop
+  gameStarted = true;
+}
+
 // On track end, play the next one
 bgMusic.addEventListener('ended', playNextTrack);
 
 // Bind to first interaction
-document.addEventListener('click', startMusicOnce);
-document.addEventListener('keydown', startMusicOnce);
-document.addEventListener('touchstart', startMusicOnce);
+document.addEventListener('click', startGame);
+document.addEventListener('keydown', startGame);
+document.addEventListener('touchstart', startGame);
 
 // Sprite loading
 const spritePaths = {
   player: {
-    down: 'assets/player.png',
-    left: 'assets/player.png',
-    right: 'assets/player.png',
-    up: 'assets/player.png',
+    down: 'assets/player-front.png',
+    left: 'assets/player-left.png',
+    right: 'assets/player-right.png',
+    up: 'assets/player-front.png',
   },
   props: {
     trees: [
@@ -93,10 +140,10 @@ const spritePaths = {
     nest: 'assets/nest.png' // Your egg stand from earlier
   },
   npc: {
-    down: 'assets/caci.png',
-    left: 'assets/caci.png',
-    right: 'assets/caci.png',
-    up: 'assets/caci.png',
+    down: 'assets/caci-front.png',
+    left: 'assets/caci-left.png',
+    right: 'assets/caci-right.png',
+    up: 'assets/caci-front.png',
   }  
 };
 
@@ -128,8 +175,8 @@ let player = {
   x: 0,
   y: 0,
   speed: 2,
-  width: 52,
-  height: 52,
+  width: playerWidth,
+  height: playerHeight,
   direction: 'down',
   sprite: null,
   eggCount: 0,
@@ -170,8 +217,8 @@ function placeProp(type, width, height, extra = {}) {
 
 function placePlayer() {
   const px = WORLD_WIDTH / 2 - 26;
-  const py = WORLD_HEIGHT / 2 - 26;
-  const rect = { x: px, y: py, width: 52, height: 52 };
+  const py = WORLD_HEIGHT / 2 - 40;
+  const rect = { x: px, y: py, width: playerWidth, height: playerHeight };
 
   // Try center first, else try nearby
   if (!isOverlapping(rect, 16)) {
@@ -183,9 +230,9 @@ function placePlayer() {
   // Search in 100 random spots
   let tries = 0;
   while (tries++ < 100) {
-    const x = Math.floor(Math.random() * (WORLD_WIDTH - 52));
-    const y = Math.floor(Math.random() * (WORLD_HEIGHT - 52));
-    const test = { x, y, width: 52, height: 52 };
+    const x = Math.floor(Math.random() * (WORLD_WIDTH - playerWidth));
+    const y = Math.floor(Math.random() * (WORLD_HEIGHT - playerHeight));
+    const test = { x, y, width: playerWidth, height: playerHeight };
     if (!isOverlapping(test, 16)) {
       player.x = x;
       player.y = y;
@@ -198,18 +245,17 @@ function placePlayer() {
   player.y = py;
 }
 
-const props = [];
-
-// 🌳 Trees (30)
+function generateWorld() {
+  // 🌳 Trees (30)
 for (let i = 0; i < 30; i++) {
-  placeProp('tree', 52, 52, {
+  placeProp('tree', treeWidth, treeHeight, {
     variant: Math.floor(Math.random() * sprites.props.trees.length)
   });
 }
 
 // 🏕️ Tents (20)
 for (let i = 0; i < 20; i++) {
-  placeProp('tent', 52, 52, {
+  placeProp('tent', tentWidth, tentHeight, {
     id: `tent${i + 1}`,
     variant: Math.floor(Math.random() * sprites.props.tents.length)
   });
@@ -217,18 +263,18 @@ for (let i = 0; i < 20; i++) {
 
 // 🥚 Nests (5) — 92x92
 for (let i = 0; i < 5; i++) {
-  placeProp('nest', 92, 92);
+  placeProp('nest', nestWidth, nestHeight);
 }
 
 placePlayer();
 
-const npcs = props
+npcs = props
   .filter(p => p.type === 'tent')
   .map(p => ({
     x: p.x,
     y: p.y,
-    width: 42,
-    height: 52,
+    width: npcWidth,
+    height: npcHeight,
     direction: 'down',
     sprite: sprites.npc.down,
     homeX: p.x,
@@ -243,6 +289,12 @@ const npcs = props
     angry: false,
     angryTimer: 0
   }));
+}
+
+const props = [];
+let npcs = [];
+
+generateWorld();
 
 let thrownEggs = []; // Array of flying eggs
 
@@ -274,7 +326,7 @@ function spawnNPC() {
 
   // Don't spawn if too many NPCs are already near that tent
   const tooClose = npcs.some(npc =>
-    Math.abs(npc.x - tent.x) < 40 && Math.abs(npc.y - tent.y) < 40
+    Math.abs(npc.x - tent.x) < 60 && Math.abs(npc.y - tent.y) < 80
   );
 
   if (tooClose) return;
@@ -283,8 +335,8 @@ function spawnNPC() {
   const newNPC = {
     x: tent.x,
     y: tent.y,
-    width: 52,
-    height: 52,
+    width: npcWidth,
+    height: npcHeight,
     direction: 'down',
     sprite: sprites.npc.down,
     homeX: tent.x,
@@ -405,7 +457,7 @@ function updateNPCs() {
     }
 
     // Randomly go angry
-    if (!npc.angry && Math.random() < 0.0005) {
+    if (!npc.angry && Math.random() < 0.0003) {
       npc.angry = true;
       npc.angryTimer = Math.floor(Math.random() * 600) + 300;
     }
@@ -489,10 +541,26 @@ function updateNPCs() {
 
     if (npc.angry && isColliding(npcRect, playerRect)) {
       if (!gameOver) {
-        gameOver = true;
-        bgMusic.pause();
-        bgMusic.currentTime = 0;
-        deathSound.play();
+        if (!gameOver) {
+          gameOver = true;
+        
+          // Stop background music
+          bgMusic.pause();
+          bgMusic.currentTime = 0;
+        
+          // Play death sound
+          deathSound.currentTime = 0;
+          deathSound.play();
+        
+          // Show Game Over screen with score
+          const screen = document.getElementById('gameOverScreen');
+          const scoreText = document.getElementById('finalScore');
+          scoreText.textContent = `Your score: ${score}`;
+          screen.style.display = 'block';
+          requestAnimationFrame(() => {
+            screen.classList.add('show');
+          });
+        }        
       }
     }
 
@@ -660,6 +728,11 @@ function isLandscape() {
 
 // Loop
 function gameLoop() {
+  if (!gameStarted) {
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+
   // Center camera on player
   camera.x = player.x + player.width / 2 - (canvas.width / 2) / camera.zoom;
   camera.y = player.y + player.height / 2 - (canvas.height / 2) / camera.zoom;
@@ -706,3 +779,14 @@ function gameLoop() {
 }
 
 gameLoop();
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  // Hide game over screen
+  document.getElementById('gameOverScreen').style.display = 'none';
+
+  // Set flag to skip welcome screen
+  skipWelcomeScreen = true;
+
+  // Reset game state and restart
+  resetGame(); // ⬅️ We'll write this next
+});

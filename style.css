@@ -130,3 +130,13 @@ button {
     display: none !important;
   }
 }
+
+#gameOverScreen {
+  transition: opacity 0.5s ease;
+  opacity: 0;
+}
+
+#gameOverScreen.show {
+  opacity: 1;
+}
+
