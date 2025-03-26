@@ -7,16 +7,35 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="welcomeScreen" style="position:absolute; top:0; left:0; width:100%; height:100%; background:#111; color:white; font-family:sans-serif; text-align:center; z-index:30; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
-    <h1 style="font-size:40px; margin-bottom:20px;">Escape from Ćaciland</h1>
-    <p style="max-width:600px; font-size:18px; line-height:1.5; margin-bottom:40px;">
+  <div id="welcomeScreen" style="
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #111;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow: auto;
+">
+  <div id="welcomeContent" style="max-width: 600px;">
+    <h1 style="font-size: 40px; margin-bottom: 20px;">Escape from Ćaciland</h1>
+    <p style="font-size: 18px; line-height: 1.5; margin-bottom: 40px;">
       🕹 Use <strong>arrow keys</strong> (or touch buttons) to move<br>
       🧺 Collect eggs from egg stands scattered around the map<br><br>
       🥚 Press <strong>Space</strong> (or tap Throw button) to throw an egg<br>
       🎯 Hit ćaci with eggs to earn points... but beware of angry ones!
     </p>
-    <p style="font-size:16px; opacity:0.8;">Press any key or tap to start</p>
+    <p style="font-size: 16px; opacity: 0.8;">Tap or press any key to start</p>
   </div>
+</div>
+
   
   <canvas id="gameCanvas"></canvas>
   <div id="gameOverScreen" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); color:white; font-family:sans-serif; text-align:center; z-index:20; padding-top:100px;">

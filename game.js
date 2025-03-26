@@ -53,12 +53,24 @@ function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+function resizeWelcomeScreen() {
+  const welcome = document.getElementById('welcomeScreen');
+  if (welcome) {
+    welcome.style.height = `${window.innerHeight}px`;
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  resizeWelcomeScreen();
+});
 
 window.addEventListener("orientationchange", () => {
   resizeCanvas();
+  resizeWelcomeScreen();
 });
+resizeCanvas();
+resizeWelcomeScreen();
 
 function playNextTrack() {
   currentTrackIndex = (currentTrackIndex + 1) % musicPlaylist.length;
