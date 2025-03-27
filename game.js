@@ -37,9 +37,13 @@ const musicPlaylist = [
 const deathSound = new Audio('assets/nemoj-da-me-guras.mp3');
 deathSound.volume = 1.0; // you can adjust if needed
 
+const ambientSound = new Audio('assets/ambient.mp3');
+ambientSound.loop = true;
+ambientSound.volume = 0.2; // ✅ quieter than bgMusic and death sound
+
 let currentTrackIndex = 0;
 const bgMusic = new Audio();
-bgMusic.volume = 0.5;
+bgMusic.volume = 0.4;
 bgMusic.loop = false; // handled manually
 
 const camera = {
@@ -97,6 +101,11 @@ function startGame() {
     }
 
     startMusicOnce();
+
+    ambientSound.play().catch(() => {
+      console.warn("Ambient sound blocked by browser.");
+    });
+
     gameStarted = true;
   }
 }
@@ -117,6 +126,9 @@ function resetGame() {
   // Restart music
   bgMusic.currentTime = 0;
   bgMusic.play();
+
+  ambientSound.currentTime = 0;
+  ambientSound.play();
 
   // Resume game loop
   gameStarted = true;
@@ -559,6 +571,9 @@ function updateNPCs() {
           // Stop background music
           bgMusic.pause();
           bgMusic.currentTime = 0;
+
+          ambientSound.pause();
+          ambientSound.currentTime = 0;
         
           // Play death sound
           deathSound.currentTime = 0;
